@@ -1,0 +1,231 @@
+#include "bits/stdc++.h"
+#include <cstdlib>
+using namespace std;
+
+string player1;
+string player2;
+
+int moves;
+int opened;
+
+int board[11][11];
+bool used[11][11];
+
+int row[] = {-1, -1, -1, 0, 0, 1, 1, 1};
+int col[] = {-1, 0, 1, -1, 1, -1, 0, 1};
+
+void restart();
+
+void fill_board()
+{
+    for ( int i = 0; i < 11; ++i) {
+        for (int j = 0; j < 11; ++j)
+        {
+            board[i][j] = 0;
+            used[i][j] = false;
+            moves = 0;
+            opened = 0;
+            board[10][i] = 0;
+            board[i][10] = 0;
+        }
+
+    }
+        for ( int i = 0; i < 11; ++i)
+    {
+        board[0][i] = -1;
+        board[i][0] = -1;
+        board[10][i] = -1;
+        board[i][10] = -1;
+
+    }
+
+    srand(time(0));
+    int mines = 0;
+    while(mines < 10)
+    {
+        int x = rand()% 9 + 1;
+        int y = rand()% 9 + 1;
+        if(board[x][y] != 9)
+        {
+            board[x][y] = 9;
+            for (int i =0; i < 8; ++i)
+            {
+                if(board[x+row[i]][y+col[i]] != -1 && board[x+row[i]][y+col[i]] != 9)
+                {
+                    board[x+row[i]][y+col[i]]++;
+                }
+            }
+            mines++;
+        }
+    }
+}
+
+
+void print_board()
+{
+    for(int i =1; i <= 9; i++)
+    {
+        for(int j =1; j <= 9; j++){
+            if(used[i][j]){
+                cout << board[i][j] << ' ';
+            }
+            else
+            {
+                cout << 'x' << ' ';
+            }
+        }
+        cout << '\n';
+    }
+}
+
+void enter_players_nicks(){
+    cout << "Erster Spieler: \n";
+    cin >> player1;
+
+    cout << "Zweiter Spieler: \n";
+    cin >> player2;
+}
+void recursion(int move_row, int move_col)
+{
+    used[move_row][move_col] = true;
+    opened++;
+    for(int i = 0; i < 8; i++)
+    {
+        if (!used[move_row + row[i]][move_col + col[i]] > 0 && used[move_row + row[i]][move_col + col[i]] < 9) {
+            if (board[move_row + row[i]][move_col + col[i]] > 0 && board[move_row + row[i]][move_col + col[i]] < 9)
+                used[move_row + row[i]][move_col + col[i]] = true;
+            opened++;
+        }else if(board[move_row + row[i]][move_col + col[i]] == 0) {
+                recursion(move_row + row[i], move_col + col[i]);
+            }
+        }
+    }
+
+
+void go_on()
+{
+    cout << "DU BIST TOD! \n Versuch nochmal - Ja oder Mein (J/N): ";
+    char re;
+    cin >> re;
+    if(re == 'J')
+    {
+        restart();
+    }
+    else if (re == 'N')
+    {
+        exit(0);
+    }
+    else
+    {
+        bool good = false;
+        while(!good)
+        {
+            cout << "Du hast falsche Buchstabe eingegeben, versuch nochmal! ";
+            cin >> re;
+            if(re == 'J' || re == 'N')
+            {
+                good = true;
+            }
+        }
+        if(re == 'J')
+        {
+            restart();
+        }
+        else if (re == 'N')
+        {
+            exit(0);
+        }
+    }
+}
+
+
+pair<int, int> next_move()
+{
+    bool valid = false;
+    int cur_row, cur_col;
+
+    while(!valid)
+    {
+        if(moves % 2 == 0)
+        {
+            cout << "Dein Schritt, " << player1;
+        }
+        else
+        {
+            cout << "Dein Schritt, " << player2;
+        }
+        cout << ", Gib dein Schritt (Rheie[1-9] Colonne[1-9]): ";
+        cin >> cur_row >> cur_row;
+
+        if(cur_row > 9 || cur_row < 1 || cur_col > 9 || cur_col < 1 || used[cur_row][cur_col])
+        {
+            cout << " Deine Koordinaten existieren nicht :( \n Versuch nochmal !!! ";
+        }
+        else
+        {
+            valid = true;
+        }
+    }
+    return {cur_row, cur_col};
+}
+
+
+void game()
+{
+    pair <int, int > move = next_move();
+    int move_row = move.first;
+    int move_col = move.second;
+    if(board[move_row][move_col] == 9) {
+        cout << "BOOM!!!!!!! ";
+        if (moves % 2 == 0) {
+            cout << player1 << " ";
+        } else {
+            cout << player2 << " ";
+        }
+        cout << "Nieder...";
+        go_on();
+    }
+    else if (board[move_row][move_col] == 0)
+    {
+        recursion(move_row, move_col);
+    }
+    else
+    {
+        used[move_row][move_col] = true;
+        opened++;
+    }
+    print_board();
+    moves++;
+    if(opened == 9 * 9 - 10)
+    {
+        cout << "Alle bekommen Gewinn! Feld ist rein! ";
+        go_on();
+    }
+    else
+    {
+        game();
+    }
+}
+
+void restart()
+{
+    cout << "___________________________________\nNeuspiel\n";
+
+    fill_board();
+    print_board();
+    game();
+}
+
+
+int main()
+{
+    cout << "___________________________________\nNeuspiel\n";
+
+    //restart();
+    enter_players_nicks();
+    fill_board();
+    print_board();
+    game();
+
+    return 0;
+}
